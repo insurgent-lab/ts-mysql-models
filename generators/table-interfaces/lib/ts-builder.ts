@@ -1,0 +1,284 @@
+import * as change_case from "change-case";
+import { writeFileSync, mkdirSync, existsSync } from "fs";
+import * as Knex from "knex";
+import * as pluralize from "pluralize";
+import { InserterBuilder } from "./inserter-builder";
+import { GettersBuilder } from "./getter-builder";
+import InterfaceBuilder from "./interface-builder";
+import { ISetting } from "./isetting";
+import ModelBuilder from "./model-builder";
+import { IDatabaseSchema } from "./mysql-database-definition";
+import SpBuilder from "./sp-builder";
+import TableColumnsBuilder from "./table-columns-builder";
+import { TableClass } from "./table-class";
+import { UpdateBuilder } from "./update-builder";
+import { DefinitionBuilder } from "./definition-builder";
+import { AbstractHandlerBuilder } from "./abstract-handler-builder";
+import GraphQlBuilder from "./graphql-builder";
+
+export default class TsBuilder {
+    public static async init(knex: Knex, folder: string): Promise<TsBuilder> {
+        return await new TsBuilder(folder).init(knex);
+    }
+
+    public static async runDefault(knex: Knex, folder: string) {
+        const builder = await TsBuilder.init(knex, folder);
+        builder.renderDefault();
+    }
+
+    private static normFolder(folder: string): string {
+        if (!folder) {
+            return "";
+        }
+        if (!(folder.endsWith("/") || folder.endsWith("\\"))) {
+            folder += "/";
+        }
+        return folder;
+    }
+
+    public readonly mysqlTypes = {
+        blob: "any",
+        bigint: "number",
+        char: "string",
+        date: "Date",
+        datetime: "Date",
+        decimal: "number",
+        double: "number",
+        float: "number",
+        int: "number",
+        longblob: "any",
+        longtext: "string",
+        mediumtext: "string",
+        set: "string",
+        smallint: "number",
+        text: "string",
+        timestamp: "Date | string",
+        tinyint: "boolean",
+        varchar: "string",
+        enum: "enum",
+    };
+
+    public settings: ISetting = {
+        appendIToDeclaration: true,
+        appendIToFileName: true,
+        camelCaseFnNames: true,
+        defaultClassModifier: "export interface",
+        interfaceFolder: "./interfaces/generated/db/",
+        optionalParameters: true,
+        singularizeClassNames: true,
+        suffixGeneratedToFilenames: true
+    };
+
+    private folder: string;
+    private schema!: IDatabaseSchema
+    constructor(folder: string, schema?: IDatabaseSchema) {
+        this.folder = TsBuilder.normFolder(folder);
+        if (schema) {
+            this.schema = schema;
+        }
+    }
+
+    public getTypeMap(): Map<string, string> {
+        const map = new Map<string, string>();
+        Object.keys(this.mysqlTypes).forEach((key: string) => map.set(key, (this.mysqlTypes as any)[key]));
+        return map;
+    }
+
+    public async init(knex: Knex, dbName?: string): Promise<TsBuilder> {
+        const builder = new ModelBuilder(knex, dbName);
+        this.schema = await builder.renderDatabaseSchema();
+        return this;
+    }
+
+    public renderDefault() {
+        console.log("Generator started");
+        if (!existsSync(this.intefaceFullPath())) {
+            console.log("Mdir:" + this.intefaceFullPath());
+            mkdirSync(this.intefaceFullPath());
+        }
+        if (!existsSync(this.graphQlFullPath())) {
+            console.log("Mdir:" + this.graphQlFullPath());
+            mkdirSync(this.graphQlFullPath());
+        }
+
+        console.log("Generating ql files");
+        this.renderGraphQlFiles();
+
+        console.log("Generating table file");
+        this.renderTableFile();
+        console.log("Generating view file");
+        this.renderViewFile();
+        console.log("Generating column file");
+        this.renderColumnsFile();
+        console.log("Generating sp file");
+        this.renderStoredProcedure();
+        console.log("Generating class files");
+        this.renderClassFiles();
+        console.log("Render view class files");
+        this.renderViewClassFiles();
+        console.log("Render inserter file");
+        this.renderInserter();
+        console.log("Render getter file");
+        this.renderGetter();
+        this.renderSchemaOperator();
+        console.log("render abstract handler");
+        this.renderAbstractHandler();
+    }
+
+    private intefaceFullPath(): string {
+        return this.folder + this.settings.interfaceFolder;
+    }
+
+    private graphQlFullPath(): string {
+        return this.folder + "graphql";
+    }
+
+    private renderTableFile(): void {
+        const start = "export default class Tables { \n";
+        const arr = this.listTables().sort().map(t => "\t static " + change_case.constantCase(t) + " = '" + t + "';");
+        const content = this.getMetaText() + start + arr.join("\n") + "\n}";
+        writeFileSync(this.folder + "tables" + this.getFilenameEnding(), content);
+    }
+
+    private renderViewFile(): void {
+        const start = "export default class Views { \n";
+        const arr = this.listViews().sort().map(t => "\tstatic " + change_case.constantCase(t) + " = '" + t + "';");
+        const content = this.getMetaText() + start + arr.join("\n") + "\n}";
+        writeFileSync(this.folder + "views" + this.getFilenameEnding(), content);
+    }
+
+    private renderColumnsFile(): void {
+        const colBuilder = new TableColumnsBuilder(this.schema);
+        const content = colBuilder.renderTemplate();
+        writeFileSync(this.folder + "columns" + this.getFilenameEnding(), content);
+    }
+
+    private renderGraphQlFiles() {
+        const qlBuilder = new GraphQlBuilder();
+        let tableClasses = this.renderClasses(this.listTables(), this.folder + "graphql/", true);
+        tableClasses.forEach((tc) => {
+            const definition = qlBuilder.renderTs(this.schema.tables[tc.tableName], tc.className);
+            writeFileSync(tc.fullPath, definition);
+        });
+        tableClasses = this.renderClasses(this.listViews(), this.folder + "graphql/", true);
+        tableClasses.forEach(tc => {
+            const definition = qlBuilder.renderTs(this.schema.views[tc.tableName], tc.className);
+            writeFileSync(tc.fullPath, definition);
+        });
+    }
+
+    private renderClassFiles() {
+        const tables = this.listTables();
+        const tableClasses = this.renderClasses(tables, this.intefaceFullPath(), true);
+        const interfaceBuilder = new InterfaceBuilder(this.settings, this.mysqlTypes);
+        tableClasses.forEach(tc => {
+            const definition = interfaceBuilder.renderTs(tc, this.schema.tables[tc.tableName]);
+            writeFileSync(tc.fullPath, definition);
+        });
+    }
+
+    private renderViewClassFiles() {
+        const views = this.listViews();
+        const interfaceBuilder = new InterfaceBuilder(this.settings, this.mysqlTypes);
+        this.renderClasses(views, this.intefaceFullPath(), true).forEach(tc => {
+            const definition = interfaceBuilder.renderTs(tc, this.schema.views[tc.tableName]);
+            writeFileSync(tc.fullPath, definition);
+        });
+    }
+
+    private renderInserter() {
+        const tables = this.listTables();
+        const tableClasses = this.renderClasses(tables, this.intefaceFullPath(), true);
+        const inserterCotent = new InserterBuilder().render(tableClasses, this.settings.interfaceFolder);
+        writeFileSync(this.folder + this.toFilename("inserter"), inserterCotent);
+    }
+
+    private renderGetter() {
+        const tables = this.listTables();
+        const tableClasses = this.renderClasses(tables, this.intefaceFullPath(), true);
+        tableClasses.push(...this.renderClasses(this.listViews(), this.intefaceFullPath(), false));
+        const inserterCotent = new GettersBuilder(this.schema, this.getTypeMap()).render(tableClasses, this.settings.interfaceFolder);
+        writeFileSync(this.folder + this.toFilename("getter"), inserterCotent);
+    }
+
+    private renderSchemaOperator() {
+        let schemaClass = new DefinitionBuilder(this.schema).renderSchema();
+        writeFileSync(this.folder + this.toFilename("definition"), schemaClass);
+
+        const tableClasses = this.renderClasses(this.listTables(), this.intefaceFullPath(), true);
+        const inserterCotent = new UpdateBuilder().renderUpdater(tableClasses, this.settings.interfaceFolder);
+        writeFileSync(this.folder + this.toFilename("updater"), inserterCotent);
+    }
+
+    private renderStoredProcedure() {
+        const spBuiler = new SpBuilder(this.schema.storedProcedures, this.mysqlTypes);
+        const filename = "stored-procedures" + this.getFilenameEnding();
+        writeFileSync(this.folder + filename, spBuiler.renderTemplate());
+    }
+
+    private renderAbstractHandler() {
+        const builder = new AbstractHandlerBuilder();
+        writeFileSync(this.folder + this.toFilename("abstract-handler"), builder.getFileContent());
+    }
+
+    private getMetaText(): string {
+        const meta = `/**\n * Autogenerated class containing all the tables, DO NOT MODIFY\n */\n`;
+        return meta + "/* tslint:disable */\n\n";
+    }
+
+    private renderClasses(tables: string[], folder: string, isTable: boolean): TableClass[] {
+        return tables.map(t => {
+            let fnName: string;
+            let fnPlural: string;
+            const className = this.getClassName(t);
+            fnName = change_case.pascalCase(className);
+            fnPlural = change_case.pascalCase(t);
+
+            const filename = this.toFilename(t);
+            return {
+                className: this.getClassName(t),
+                prefixedClassName: this.getPrefixedClassName(t),
+                filename: filename,
+                fnName: fnName,
+                fnPlural: fnPlural,
+                fullPath: folder + filename,
+                tableName: t,
+                isTable: isTable
+            } as TableClass;
+        });
+    }
+
+    private listTables() {
+        return Object.keys(this.schema.tables);
+    }
+
+    private listViews() {
+        return Object.keys(this.schema.views);
+    }
+
+    private getClassName(tableName: string): string {
+        const className = this.settings.singularizeClassNames ? pluralize.singular(tableName) : tableName;
+        return change_case.pascalCase(className.replace(/ps_/g, ''));
+    }
+
+    private getPrefixedClassName(tableName: string): string {
+        const preI = this.settings.appendIToDeclaration ? "IModel" : "";
+        return preI + this.getClassName(tableName);
+    }
+
+    private getFilenameEnding(): string {
+        // if (this.settings.suffixGeneratedToFilenames) {
+        //     return ".generated.ts";
+        // }
+        return ".ts";
+    }
+
+    private toFilename(name: string): string {
+        let filename = this.settings.singularizeClassNames ? pluralize.singular(name) : name;
+        filename = change_case.snakeCase(filename);
+        if (filename.startsWith("ps_")) {
+            filename = filename.replace("ps_", "");
+        }
+        return change_case.snakeCase(filename) + this.getFilenameEnding();
+    }
+}

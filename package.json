@@ -1,0 +1,41 @@
+{
+  "version": "0.1.0",
+  "name": "ts-mysql-models",
+  "description": "",
+  "main": "index.js",
+  "types": "index.d.ts",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/bricoprive/ts-mysql-models.git"
+  },
+  "keywords": [
+    "typescript",
+    "mysql",
+    "class",
+    "interface"
+  ],
+  "author": "Pierre Cavin <tech@sherlox.io>",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/bricoprive/ts-mysql-models/issues"
+  },
+  "homepage": "https://github.com/bricoprive/ts-mysql-models#readme",
+  "dependencies": {
+    "change-case": "^3.1.0",
+    "handlebars": "^4.4.3",
+    "knex": "^0.19.5",
+    "mysql": "^2.17.1",
+    "pluralize": "^8.0.0",
+    "typescript": "^3.6.3"
+  },
+  "devDependencies": {
+    "@types/handlebars": "^4.1.0",
+    "@types/knex": "0.16.1",
+    "@types/node": "^12.7.12",
+    "@types/pluralize": "0.0.29",
+    "tslint": "^5.20.0"
+  }
+}
