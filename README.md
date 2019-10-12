@@ -1,15 +1,8 @@
-# ts-mysql-model
+# ts-mysql-models
 
-[![npm version](http://img.shields.io/npm/v/ts-mysql-model.svg)](https://npmjs.org/package/ts-mysql-model)
-[![Dependencies Status](https://david-dm.org/bricoprive/ts-mysql-model.svg)](https://david-dm.org/bricoprive/ts-mysql-model)
-
-  This is an attempt to auto generate a boilerplate for projects using [TypeScript](https://github.com/Microsoft/TypeScript) in combination with MySql. Generating interfaces and ORM-like sturctures allowes the IDE to provide auto-completion and compile time error handling. This project relies heavily on [Knex](https://github.com/tgriesser/knex)
+This is an attempt to auto generate a boilerplate for projects using [TypeScript](https://github.com/Microsoft/TypeScript) in combination with MySql. Generating interfaces and ORM-like sturctures allowes the IDE to provide auto-completion and compile time error handling. This project relies heavily on [Knex](https://github.com/tgriesser/knex)
 
 # WARNING: This is being reworked, please wait for a bit because it is unstable for now.
-
-## Installation
-
-    $ yarn add ts-mysql-model
 
 ## Examples
 

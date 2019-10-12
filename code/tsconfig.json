@@ -1,0 +1,27 @@
+{
+  "compilerOptions": {
+    "moduleResolution": "node",
+    "module": "ESNext",
+    "target": "ESNext",
+    "lib": ["es6"],
+    "pretty": true,
+    "noImplicitAny": true,
+    "sourceMap": true,
+    "outDir": "../build",
+    "esModuleInterop": true,
+    "strictNullChecks": true,
+    "baseUrl": ".",
+    "paths": {
+      "*": [
+        "node_modules/*",
+        "interfaces/*"
+      ]
+    },
+    "types": [
+      "knex"
+    ]
+  },
+  "include": [
+    "./**/*"
+  ]
+}

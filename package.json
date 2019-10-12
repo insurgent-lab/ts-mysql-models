@@ -5,6 +5,10 @@
   "main": "index.js",
   "types": "index.d.ts",
   "scripts": {
+    "start": "yarn run build && node --experimental-modules --es-module-specifier-resolution=node --no-warnings --use-strict --expose-gc build/index.js",
+    "copy-statics": "copyfiles -u 1 'code/**/*.*' -e '**/node_modules/**' -e '**/*.ts' build/",
+    "clean-build": "rimraf build/ test-build/",
+    "build": "yarn run clean-build && yarn run copy-statics && cd build/ && yarn install --prod && cd ../ && tsc --project code/",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "repository": {
@@ -24,18 +28,8 @@
   },
   "homepage": "https://github.com/bricoprive/ts-mysql-models#readme",
   "dependencies": {
-    "change-case": "^3.1.0",
-    "handlebars": "^4.4.3",
-    "knex": "^0.19.5",
-    "mysql": "^2.17.1",
-    "pluralize": "^8.0.0",
-    "typescript": "^3.6.3"
-  },
-  "devDependencies": {
-    "@types/handlebars": "^4.1.0",
-    "@types/knex": "0.16.1",
-    "@types/node": "^12.7.12",
-    "@types/pluralize": "0.0.29",
-    "tslint": "^5.20.0"
+    "copyfiles": "^2.1.1",
+    "rimraf": "^3.0.0",
+    "typescript": "^3.6.4"
   }
 }
