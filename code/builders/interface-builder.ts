@@ -43,10 +43,10 @@ export default class InterfaceBuilder {
 
   private buildTypeRow (col: IDatabaseColumn, className: string): string {
     const tabs = '\t'
-    const optional = col.null ? '?' : ''
+    const optional = col.readNull ? '?' : ''
     const tsType = this.getTsType(col, className)
     const field = col.field
-    return `${tabs}"${field}"${optional}: ${tsType};\n`
+    return `${tabs}'${field}'${optional}: ${tsType}\n`
   }
 
   private getTsType (col: IDatabaseColumn, className: string): string {

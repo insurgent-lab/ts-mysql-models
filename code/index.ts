@@ -1,10 +1,12 @@
 import changeCase from 'change-case'
 import { existsSync, mkdirSync, writeFileSync } from 'fs'
 import Knex from 'knex'
+import ncp from 'ncp'
 import pluralize from 'pluralize'
+import ClassBuilder from './builders/class-builder'
 import InterfaceBuilder from './builders/interface-builder'
-import { ISetting, IDatabaseSchema, ITable } from './interfaces'
 import ModelBuilder from './builders/model-builder'
+import { IDatabaseSchema, ISetting, ITable } from './interfaces'
 
 export default class TsBuilder {
   public static async init (knex: Knex, folder: string): Promise<TsBuilder> {
@@ -54,6 +56,7 @@ export default class TsBuilder {
     camelCaseFnNames: true,
     defaultClassModifier: 'export interface',
     interfaceFolder: './interfaces/',
+    classFolder: './classes/',
     optionalParameters: true,
     singularizeClassNames: true,
     suffixGeneratedToFilenames: true,
@@ -77,36 +80,70 @@ export default class TsBuilder {
   public async init (knex: Knex, dbName?: string): Promise<TsBuilder> {
     const builder = new ModelBuilder(knex, dbName)
     this.schema = await builder.renderDatabaseSchema()
-    console.log(this.schema)
     return this
   }
 
   public renderDefault () {
     console.log('Generator started')
-    if (!existsSync(this.intefaceFullPath())) {
-      console.log('Mdir:' + this.intefaceFullPath())
-      mkdirSync(this.intefaceFullPath(), { recursive: true })
+    if (!existsSync(this.interfaceFullPath())) {
+      console.log('Mkdir:' + this.interfaceFullPath())
+      mkdirSync(this.interfaceFullPath(), { recursive: true })
     }
 
-    console.log('Generating class files')
-    this.renderClassFiles()
+    if (!existsSync(this.classFullPath())) {
+      console.log('Mkdir:' + this.classFullPath())
+      mkdirSync(this.classFullPath(), { recursive: true })
+    }
+
+    console.log('Generating files')
+    this.renderFiles()
   }
 
-  private intefaceFullPath (): string {
+  private interfaceFullPath (): string {
     return this.folder + this.settings.interfaceFolder
   }
 
-  private renderClassFiles () {
-    const tables = this.listTables()
-    const tableClasses = this.renderClasses(tables, this.intefaceFullPath(), true)
-    const interfaceBuilder = new InterfaceBuilder(this.settings, this.mysqlTypes)
-    tableClasses.forEach((tc) => {
-      const definition = interfaceBuilder.renderTs(tc, this.schema.tables[tc.tableName])
-      writeFileSync(tc.fullPath, definition)
+  private classFullPath (): string {
+    return this.folder + this.settings.classFolder
+  }
+
+  private renderFiles () {
+    ncp.ncp('code/base/', 'test-build/', (err) => {
+      if (err) {
+        return console.error(err)
+      }
+      const tables = this.listTables()
+      const tableClasses = this.renderClasses(tables, true)
+      this.renderInterfacesFiles(tableClasses)
+      this.renderClassFiles(tableClasses)
     })
   }
 
-  private renderClasses (tables: string[], folder: string, isTable: boolean): ITable[] {
+  private renderInterfacesFiles (tableClasses: ITable[]) {
+    const interfaceBuilder = new InterfaceBuilder(this.settings, this.mysqlTypes)
+    let interfacesIndex = ''
+    tableClasses.forEach((tc) => {
+      const definition = interfaceBuilder.renderTs(tc, this.schema.tables[tc.tableName])
+      writeFileSync(tc.interfacePath, definition)
+      interfacesIndex += `export * from './${tc.importName}'\n`
+    })
+    const interfacesIndexPath = this.interfaceFullPath() + 'index.ts'
+    writeFileSync(interfacesIndexPath, interfacesIndex)
+  }
+
+  private renderClassFiles (tableClasses: ITable[]) {
+    const classBuilder = new ClassBuilder(this.settings, this.mysqlTypes)
+    let classesIndex = ''
+    tableClasses.forEach((tc) => {
+      const definition = classBuilder.renderTs(tc, this.schema.tables[tc.tableName])
+      writeFileSync(tc.classPath, definition)
+      classesIndex += `export { default as ${tc.className} } from './${tc.importName}'\n`
+    })
+    const classesIndexPath = this.classFullPath() + 'index.ts'
+    writeFileSync(classesIndexPath, classesIndex)
+  }
+
+  private renderClasses (tables: string[], isTable: boolean): ITable[] {
     return tables.map((t) => {
       let fnName: string
       let fnPlural: string
@@ -118,10 +155,12 @@ export default class TsBuilder {
       return {
         className: this.getClassName(t),
         prefixedClassName: this.getPrefixedClassName(t),
+        importName: filename.replace('.ts', ''),
         filename,
         fnName,
         fnPlural,
-        fullPath: folder + filename,
+        interfacePath: this.interfaceFullPath() + filename,
+        classPath: this.classFullPath() + filename,
         tableName: t,
         isTable,
       }
@@ -138,7 +177,7 @@ export default class TsBuilder {
   }
 
   private getPrefixedClassName (tableName: string): string {
-    const preI = this.settings.appendIToDeclaration ? 'IModel' : ''
+    const preI = this.settings.appendIToDeclaration ? 'I' : ''
     return preI + this.getClassName(tableName)
   }
 
@@ -146,13 +185,14 @@ export default class TsBuilder {
     return '.ts'
   }
 
-  private toFilename (name: string): string {
+  private toFilename (name: string, withExtension?: boolean): string {
     let filename = this.settings.singularizeClassNames ? pluralize.singular(name) : name
     filename = changeCase.snakeCase(filename)
     if (filename.startsWith('ps_')) {
       filename = filename.replace('ps_', '')
     }
-    return changeCase.snakeCase(filename) + this.getFilenameEnding()
+    if (!withExtension) return changeCase.snakeCase(filename) + this.getFilenameEnding()
+    return changeCase.snakeCase(filename)
   }
 }
 

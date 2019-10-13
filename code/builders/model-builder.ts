@@ -104,7 +104,8 @@ export default class ModelBuilder {
           col.length = ModelBuilder.getMysqlLength(col.type)
           col.isPrimary = col.key === 'PRI'
           col.index = i
-          col.null = col.null === 'YES' || col.default !== null || col.extra.includes('auto_increment')
+          col.readNull = col.null === 'YES' || col.default !== null
+          col.writeNull = col.null === 'YES' || col.default !== null || col.extra.includes('auto_increment')
           if (ModelBuilder.stripMysqlLength(col.type) === 'enum') {
             const enumArray = col.type.replace('enum(', '').replace(')', '').replace(/'/g, '').split(',')
             col.enum = enumArray

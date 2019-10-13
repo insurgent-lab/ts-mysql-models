@@ -2,7 +2,9 @@ export interface IDatabaseColumn {
   'extra': string
   'default'?: any
   'key': string
-  'null': string | boolean
+  'null': string
+  'readNull': boolean
+  'writeNull': boolean
   'type': string
   'field': string
   'length': number

@@ -1,6 +1,8 @@
 export interface ITable {
+  importName: string
   filename: string
-  fullPath: string
+  interfacePath: string
+  classPath: string
   tableName: string
   className: string
   fnName: string

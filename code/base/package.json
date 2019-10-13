@@ -11,21 +11,11 @@
   "author": "Pierre Cavin <tech@sherlox.io>",
   "license": "MIT",
   "dependencies": {
-    "@types/ncp": "^2.0.2",
-    "change-case": "^3.1.0",
-    "handlebars": "^4.4.3",
     "knex": "^0.19.5",
     "mysql": "^2.17.1",
-    "ncp": "^2.0.0",
-    "pluralize": "^8.0.0",
     "typescript": "^3.6.4"
   },
   "devDependencies": {
-    "@types/node": "^12.7.12",
-    "@types/pluralize": "0.0.29",
-    "copyfiles": "^2.1.1",
-    "rimraf": "^3.0.0",
-    "tslint": "^5.20.0",
-    "tslint-config-standard": "^8.0.1"
+    "@types/node": "^12.7.12"
   }
 }
