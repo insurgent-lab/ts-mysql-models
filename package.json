@@ -31,5 +31,14 @@
     "copyfiles": "^2.1.1",
     "rimraf": "^3.0.0",
     "typescript": "^3.6.4"
+  },
+  "devDependencies": {
+    "bp-smart-commit": "^1.4.1",
+    "husky": "^3.0.9"
+  },
+  "husky": {
+    "hooks": {
+      "commit-msg": "bp-smart-commit"
+    }
   }
 }
