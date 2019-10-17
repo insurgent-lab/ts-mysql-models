@@ -41,56 +41,9 @@ build()
 [Sample project](https://github.com/AntonLapshin/typescript-mysql-model-sample) (incompatible).
 
 ## TODO
-- [ ] Allow the customization of every `settings` with an `options` object passed to `new TsBuilder()`.
-- [ ] Generate `accessers` as seen below.
+- [ ] Find a way to add / override methods for a table.
 - [ ] Handle `tinytext` & `mediumint`.
-
-#### Accessers
-Example for the product table of Prestashop.
-
-`models/product.ts`:
-```typescript
-import Knex from 'knex'
-import Model from '../helpers/model'
-import { IProduct } from '../interfaces/generated/models'
-
-const tableName = 'ps_product'
-const idField = 'id_product'
-
-export default class Product extends Model {
-  constructor (knex: Knex) {
-    super(knex, tableName, idField)
-  }
-}
-```
-
-`helpers/model.ts`:
-```typescript
-import Knex from 'knex'
-
-export default class Model {
-  protected tableName: string
-  protected idField: string
-  protected selectableProps: string
-  protected knex: Knex
-
-  constructor (knex: Knex, tableName: string, idField: string) {
-    this.knex = knex
-    this.tableName = tableName
-    this.idField = idField
-    this.selectableProps = '*'
-  }
-
-  public async find (filters: any = {}, selectedProps?: string[]): Promise<any[]> {
-    return this.knex
-      .select(...selectedProps || this.selectableProps)
-      .from(this.tableName)
-      .where(filters)
-  }
-}
-```
-
-Find a way to propagate the interface / type from `models/product.ts` to `helpers/model.ts`, replacing the `any` in the methods returns definitions.
+- [ ] Allow the customization of every `settings` with an `options` object passed to `new TsBuilder()`.
 
 ## License
 MIT
