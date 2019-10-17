@@ -17,7 +17,7 @@ export default class {{className}} {
     this.selectableProps = '*'
   }
 
-  public async insert (props: I{{className}}): Promise<number> {
+  public async insert (props: I{{className}} | I{{className}}[]): Promise<number> {
     delete props[this.idField] // not allowed to set `id`
 
     const [ itemId ]: number[] = await this.knex

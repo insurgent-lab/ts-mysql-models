@@ -14,7 +14,7 @@ export default class {{className}} {
     this.selectableProps = '*'
   }
 
-  public async insert (props: I{{className}}): Promise<number> {
+  public async insert (props: I{{className}} | I{{className}}[]): Promise<number> {
     const [ itemId ]: number[] = await this.knex
       .insert(props)
       .into(this.tableName)
