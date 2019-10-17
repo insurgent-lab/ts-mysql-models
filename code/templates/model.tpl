@@ -4,20 +4,18 @@ import { I{{className}} } from '../interfaces'
 const tableName = '{{tableName}}'
 
 export default class {{className}} {
-  protected tableName: string
   protected selectableProps: string
   protected knex: Knex
 
   constructor (knex: Knex) {
     this.knex = knex
-    this.tableName = tableName
     this.selectableProps = '*'
   }
 
   public async insert (props: I{{className}} | I{{className}}[]): Promise<number> {
     const [ itemId ]: number[] = await this.knex
       .insert(props)
-      .into(this.tableName)
+      .into(tableName)
 
     return itemId
   }
@@ -25,14 +23,14 @@ export default class {{className}} {
   public async find (filters: any = { }, selectedProps?: string[]): Promise<I{{className}}[]> {
     return this.knex
       .select(...selectedProps || this.selectableProps)
-      .from(this.tableName)
+      .from(tableName)
       .where(filters)
   }
 
   public async findOne (filters: any = { }, selectedProps?: string[]): Promise<I{{className}}> {
     const items = await this.knex
       .select(...selectedProps || this.selectableProps)
-      .from(this.tableName)
+      .from(tableName)
       .where(filters)
       .limit(1)
     return items[0]
@@ -41,13 +39,13 @@ export default class {{className}} {
   public async findAll (selectedProps?: string[]): Promise<I{{className}}[]> {
     return this.knex
       .select(...selectedProps || this.selectableProps)
-      .from(this.tableName)
+      .from(tableName)
   }
 
   public async list (field: string, filters: any = { }): Promise<any[]> {
     const list = this.knex
       .distinct()
-      .from(this.tableName)
+      .from(tableName)
       .where(filters)
       .pluck(field) as unknown as any[]
 
@@ -57,7 +55,7 @@ export default class {{className}} {
   public async count (field: string, filters: any = { }): Promise<number> {
     const res = await this.knex
       .count({ count: field })
-      .from(this.tableName)
+      .from(tableName)
       .where(filters) as unknown as Array<{ count: number}>
 
     return Number(res[0].count)
@@ -66,7 +64,7 @@ export default class {{className}} {
   public async exists (filters: any = { }): Promise<boolean> {
     const res = await this.knex
       .count({ count: '*' })
-      .from(this.tableName)
+      .from(tableName)
       .where(filters) as unknown as Array<{ count: number}>
 
     if (res[0].count > 0) return true
@@ -76,7 +74,7 @@ export default class {{className}} {
   public async max (field: string, filters: any = { }): Promise<number> {
     const res = await this.knex
       .max({ max: field })
-      .from(this.tableName)
+      .from(tableName)
       .where(filters) as unknown as Array<{ max: number}>
 
     return Number(res[0].max)
@@ -84,13 +82,13 @@ export default class {{className}} {
 
   public async update (filters: any = { }, props: any): Promise<any> {
     return this.knex.update(props)
-      .from(this.tableName)
+      .from(tableName)
       .where(filters)
   }
 
   public async delete (filters: any = { }): Promise<any> {
     return this.knex.delete()
-      .from(this.tableName)
+      .from(tableName)
       .where(filters)
   }
 }

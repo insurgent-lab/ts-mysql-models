@@ -5,24 +5,20 @@ const tableName = '{{tableName}}'
 const idField = '{{idField}}'
 
 export default class {{className}} {
-  protected tableName: string
-  protected idField: string
   protected selectableProps: string
   protected knex: Knex
 
   constructor (knex: Knex) {
     this.knex = knex
-    this.tableName = tableName
-    this.idField = idField
     this.selectableProps = '*'
   }
 
   public async insert (props: I{{className}} | I{{className}}[]): Promise<number> {
-    delete props[this.idField] // not allowed to set `id`
+    delete props[idField] // not allowed to set `id`
 
     const [ itemId ]: number[] = await this.knex
       .insert(props)
-      .into(this.tableName)
+      .into(tableName)
 
     return itemId
   }
@@ -30,15 +26,15 @@ export default class {{className}} {
   public async find (filters: any = { }, selectedProps?: string[]): Promise<I{{className}}[]> {
     return this.knex
       .select(...selectedProps || this.selectableProps)
-      .from(this.tableName)
+      .from(tableName)
       .where(filters)
   }
 
   public async findById (id: number, selectedProps?: string[]): Promise<I{{className}}> {
     const items = await this.knex
       .select(...selectedProps || this.selectableProps)
-      .from(this.tableName)
-      .where({ [this.idField]: id })
+      .from(tableName)
+      .where({ [idField]: id })
 
     return items[0]
   }
@@ -46,7 +42,7 @@ export default class {{className}} {
   public async findOne (filters: any = { }, selectedProps?: string[]): Promise<I{{className}}> {
     const items = await this.knex
       .select(...selectedProps || this.selectableProps)
-      .from(this.tableName)
+      .from(tableName)
       .where(filters)
       .limit(1)
     return items[0]
@@ -55,15 +51,15 @@ export default class {{className}} {
   public async findAll (selectedProps?: string[]): Promise<I{{className}}[]> {
     return this.knex
       .select(...selectedProps || this.selectableProps)
-      .from(this.tableName)
+      .from(tableName)
   }
 
   public async list (field?: string, filters: any = { }): Promise<any[]> {
     const list = this.knex
       .distinct()
-      .from(this.tableName)
+      .from(tableName)
       .where(filters)
-      .pluck(field || this.idField) as unknown as any[]
+      .pluck(field || idField) as unknown as any[]
 
     return list
   }
@@ -71,7 +67,7 @@ export default class {{className}} {
   public async count (field: string, filters: any = { }): Promise<number> {
     const res = await this.knex
       .count({ count: field })
-      .from(this.tableName)
+      .from(tableName)
       .where(filters) as unknown as Array<{ count: number}>
 
     return Number(res[0].count)
@@ -80,7 +76,7 @@ export default class {{className}} {
   public async exists (filters: any = { }): Promise<boolean> {
     const res = await this.knex
       .count({ count: '*' })
-      .from(this.tableName)
+      .from(tableName)
       .where(filters) as unknown as Array<{ count: number}>
 
     if (res[0].count > 0) return true
@@ -89,9 +85,9 @@ export default class {{className}} {
 
   public async existsById (id: number): Promise<boolean> {
     const res = await this.knex
-      .count({ count: this.idField })
-      .from(this.tableName)
-      .where({ [this.idField]: id }) as unknown as Array<{ count: number}>
+      .count({ count: idField })
+      .from(tableName)
+      .where({ [idField]: id }) as unknown as Array<{ count: number}>
 
     if (res[0].count > 0) return true
     return false
@@ -100,37 +96,37 @@ export default class {{className}} {
   public async max (field: string, filters: any = { }): Promise<number> {
     const res = await this.knex
       .max({ max: field })
-      .from(this.tableName)
+      .from(tableName)
       .where(filters) as unknown as Array<{ max: number}>
 
     return Number(res[0].max)
   }
 
   public async update (filters: any = { }, props: any): Promise<any> {
-    delete props[this.idField] // not allowed to set `id`
+    delete props[idField] // not allowed to set `id`
 
     return this.knex.update(props)
-      .from(this.tableName)
+      .from(tableName)
       .where(filters)
   }
 
   public async updateById (id: number, props: any): Promise<any> {
-    delete props[this.idField] // not allowed to set `id`
+    delete props[idField] // not allowed to set `id`
 
     return this.knex.update(props)
-      .from(this.tableName)
-      .where({ [this.idField]: id })
+      .from(tableName)
+      .where({ [idField]: id })
   }
 
   public async delete (filters: any = { }): Promise<any> {
     return this.knex.delete()
-      .from(this.tableName)
+      .from(tableName)
       .where(filters)
   }
 
   public async deleteById (id: number): Promise<any> {
     return this.knex.delete()
-      .from(this.tableName)
-      .where({ [this.idField]: id })
+      .from(tableName)
+      .where({ [idField]: id })
   }
 }

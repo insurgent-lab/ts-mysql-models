@@ -3,6 +3,7 @@ import { existsSync, mkdirSync, writeFileSync } from 'fs'
 import Knex from 'knex'
 import ncp from 'ncp'
 import pluralize from 'pluralize'
+import IndexBuilder from './builders/index-builder'
 import ClassBuilder from './builders/class-builder'
 import InterfaceBuilder from './builders/interface-builder'
 import ModelBuilder from './builders/model-builder'
@@ -116,6 +117,7 @@ export default class TsBuilder {
       const tableClasses = this.renderClasses(tables, true)
       this.renderInterfacesFiles(tableClasses)
       this.renderClassFiles(tableClasses)
+      this.renderIndexFile(tableClasses)
     })
   }
 
@@ -141,6 +143,13 @@ export default class TsBuilder {
     })
     const classesIndexPath = this.classFullPath() + 'index.ts'
     writeFileSync(classesIndexPath, classesIndex)
+  }
+
+  private renderIndexFile (tableClasses: ITable[]) {
+    const indexBuilder = new IndexBuilder(this.settings, this.mysqlTypes)
+    const renderedIndex = indexBuilder.renderTs(tableClasses)
+    const classesIndexPath = this.folder + 'index.ts'
+    writeFileSync(classesIndexPath, renderedIndex)
   }
 
   private renderClasses (tables: string[], isTable: boolean): ITable[] {
