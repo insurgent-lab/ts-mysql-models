@@ -10,20 +10,8 @@
     "outDir": "../build",
     "esModuleInterop": true,
     "strictNullChecks": true,
-    "baseUrl": ".",
-    "paths": {
-      "*": [
-        "node_modules/*",
-        "interfaces/*"
-      ]
-    },
-    "types": [
-      "knex"
-    ]
+    "baseUrl": "."
   },
-  "include": [
-    "./**/*"
-  ],
   "exclude": [
     "base/**"
   ]

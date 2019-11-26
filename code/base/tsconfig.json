@@ -11,17 +11,5 @@
     "esModuleInterop": true,
     "strictNullChecks": true,
     "baseUrl": ".",
-    "paths": {
-      "*": [
-        "node_modules/*",
-        "interfaces/*"
-      ]
-    },
-    "types": [
-      "knex"
-    ]
-  },
-  "include": [
-    "./**/*"
-  ]
+  }
 }
