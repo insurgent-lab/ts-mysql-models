@@ -55,7 +55,7 @@ export default class ModelBuilder {
       this.databaseName = await this.getDatabaseName()
     }
     const schema: IDatabaseSchema = {
-      storedProcedures: await this.renderStoredProcedures(),
+      // storedProcedures: await this.renderStoredProcedures(),
       tables: await this.renderTableModel(),
       views: await this.renderViewModel(),
     }
@@ -139,10 +139,11 @@ export default class ModelBuilder {
   }
 
   private async listStoredProcedures (): Promise<string[]> {
-    const SHOW_DB_QUERY = `SHOW PROCEDURE STATUS WHERE Db = ?`
-    const sps: Array<Array<{ Name: string }>> = await this.knex.raw(SHOW_DB_QUERY, [this.databaseName!])
-    return sps[0].map((sp) => sp.Name)
+    const SHOW_DB_QUERY = `SELECT routine_name FROM information_schema.routines WHERE routine_schema =  ?`
+    const sps: Array<Array<{ routine_name: string }>> = await this.knex.raw(SHOW_DB_QUERY, [this.databaseName!])
+    return sps[0].map((sp) => sp.routine_name)
   }
+
   private async listStoredProcedureParams (): Promise<IStoredProcedureParameter[]> {
     const LIST_PARAM_QUERY = `SELECT * FROM information_schema.parameters WHERE specific_schema = ?`
     const params: Array<Array<{ [key: string]: any }>> = await this.knex.raw(LIST_PARAM_QUERY, [this.databaseName!])

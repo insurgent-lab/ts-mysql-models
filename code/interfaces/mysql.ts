@@ -53,5 +53,5 @@ export interface IStoredProcedure {
 export interface IDatabaseSchema {
   tables: ITableDictionary
   views: ITableDictionary
-  storedProcedures: IStoredProcedureDictionary
+  // storedProcedures: IStoredProcedureDictionary
 }
