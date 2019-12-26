@@ -13,7 +13,7 @@
   "dependencies": {
     "@types/ncp": "^2.0.2",
     "change-case": "^3.1.0",
-    "handlebars": "^4.4.3",
+    "handlebars": "^4.5.3",
     "knex": "^0.19.5",
     "mysql": "^2.17.1",
     "ncp": "^2.0.0",
