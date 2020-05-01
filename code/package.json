@@ -6,7 +6,9 @@
   "types": "index.d.ts",
   "type": "module",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "snyk-protect": "snyk protect",
+    "prepare": "yarn run snyk-protect"
   },
   "author": "Pierre Cavin <tech@sherlox.io>",
   "license": "MIT",
@@ -18,7 +20,8 @@
     "mysql": "^2.17.1",
     "ncp": "^2.0.0",
     "pluralize": "^8.0.0",
-    "typescript": "^3.6.4"
+    "typescript": "^3.6.4",
+    "snyk": "^1.316.1"
   },
   "devDependencies": {
     "@types/node": "^12.7.12",
@@ -27,5 +30,6 @@
     "rimraf": "^3.0.0",
     "tslint": "^5.20.0",
     "tslint-config-standard": "^8.0.1"
-  }
+  },
+  "snyk": true
 }
