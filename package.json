@@ -28,7 +28,7 @@
   },
   "homepage": "https://github.com/bricoprive/ts-mysql-models#readme",
   "dependencies": {
-    "copyfiles": "^2.1.1",
+    "copyfiles": "^2.4.1",
     "rimraf": "^3.0.0",
     "typescript": "^3.6.4"
   },
